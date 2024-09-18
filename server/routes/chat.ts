@@ -8,6 +8,7 @@ export default defineWebSocketHandler({
     if (message.text().includes("ping")) {
       peer.send("pong");
     }
+    peer.send(message.text())
   },
 
   close(peer, event) {
