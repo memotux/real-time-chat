@@ -6,49 +6,47 @@ const schema = z.object({
   message: z.string(),
 })
 
-type Schema = z.output<typeof schema>
+type FormSchema = z.output<typeof schema>
 
-interface State extends Schema {
+interface FormUI {
   connected: boolean
   chat: Array<string>
 }
 
-const state = reactive<State>({
+const formState = reactive<FormSchema>({
   message: '',
+})
+const formUi = reactive<FormUI>({
   connected: false,
   chat: [],
 })
 let socket: WebSocket
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
+async function onSubmit(event: FormSubmitEvent<FormSchema>) {
   // Do something with data
   console.log(event.data)
   socket.send(event.data.message)
-  state.message = ''
+  formState.message = ''
 }
 
 onMounted(() => {
-  // Create WebSocket connection.
   socket = new WebSocket('ws://localhost:3000/chat')
 
-  // Connection opened
-  socket.addEventListener('open', socketOnOpen)
-
-  // Listen for messages
+  socket.onopen = socketOnOpen
   socket.addEventListener('message', socketOnMessage)
 })
 
 onUnmounted(() => {
-  socket.removeEventListener('open', socketOnOpen)
+  // socket.removeEventListener('open', socketOnOpen)
   socket.removeEventListener('message', socketOnMessage)
   socket.close()
 })
 
 function socketOnOpen() {
-  state.connected = true
+  formUi.connected = true
 }
 function socketOnMessage(event: MessageEvent<string>) {
-  state.chat.push(event.data)
+  formUi.chat.push(event.data)
 }
 </script>
 
@@ -60,11 +58,11 @@ function socketOnMessage(event: MessageEvent<string>) {
       class="border border-primary rounded-lg p-8 h-full w-1/2 flex flex-col justify-between"
     >
       <UContainer class="w-full">
-        <pre>{{ state.chat }}</pre>
+        <pre>{{ formUi.chat }}</pre>
       </UContainer>
       <UForm
         :schema="schema"
-        :state="state"
+        :state="formState"
         class="flex space-x-4 items-end w-full"
         @submit="onSubmit"
       >
@@ -75,13 +73,13 @@ function socketOnMessage(event: MessageEvent<string>) {
           required
         >
           <UInput
-            v-model="state.message"
+            v-model="formState.message"
             placeholder="Type a message..."
           />
         </UFormGroup>
         <UButton
           type="submit"
-          :disable="!state.connected"
+          :disable="!formUi.connected"
         >
           Submit
         </UButton>
