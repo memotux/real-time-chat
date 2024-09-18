@@ -1,6 +1,6 @@
 <template>
-  <UContainer class="prose">
-    <h1 class="text-4xl">Tux Chat</h1>
+  <UContainer class="border border-primary rounded-lg">
+    <h1 class="text-4xl text-primary">Tux Chat</h1>
     <section id="chat">
       <form></form>
     </section>
