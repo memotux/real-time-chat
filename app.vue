@@ -16,6 +16,21 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Do something with data
   console.log(event.data)
 }
+
+onMounted(() => {
+  // Create WebSocket connection.
+  const socket = new WebSocket('ws://localhost:3000/chat')
+
+  // Connection opened
+  socket.addEventListener('open', (event) => {
+    socket.send('Hello Server! ping')
+  })
+
+  // Listen for messages
+  socket.addEventListener('message', (event) => {
+    console.log('Message from server ', event.data)
+  })
+})
 </script>
 
 <template>
