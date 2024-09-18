@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@iconify-json/octicon':
+        specifier: ^1.2.0
+        version: 1.2.0
       '@nuxt/ui':
         specifier: ^2.18.5
         version: 2.18.5(magicast@0.3.5)(rollup@4.21.3)(vite@5.4.6(@types/node@22.5.5)(terser@5.33.0))(vue@3.5.6)
@@ -639,6 +642,9 @@ packages:
 
   '@iconify-json/heroicons@1.2.0':
     resolution: {integrity: sha512-EmvGN0L9EUJCmQ82rkLGZ4tkz0YGQfZV7ugKT6UvHni/bxNitQrD0gLj6NJj2W9zsSoXyNHyCX236+EJmO4pmA==}
+
+  '@iconify-json/octicon@1.2.0':
+    resolution: {integrity: sha512-9tMYingDEuh6R6ieTx5lZKWdWkgR/qbWK7ijiJlUy+3KG/spxxX8mALtmcORP8cp6h1iq0fHYu9qUrjVr0toEQ==}
 
   '@iconify/collections@1.0.461':
     resolution: {integrity: sha512-1D6cTTL3c55SpiNFpsK8vwnSLY2ia9XbarnLeyE7L152dKRg+sofV2cRbEz6UmSZLQjsgUxe16yvNoyhhx21vg==}
@@ -4178,6 +4184,10 @@ snapshots:
       vue: 3.5.6
 
   '@iconify-json/heroicons@1.2.0':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/octicon@1.2.0':
     dependencies:
       '@iconify/types': 2.0.0
 
