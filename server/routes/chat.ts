@@ -4,7 +4,9 @@ export default defineWebSocketHandler({
   open(peer) {
     console.log("[ws] open", peer);
 
-    useStorage('db').setItem('users.json', JSON.stringify({ users: ['memotux'] }))
+    const user = getCookie(peer.ctx, 'tuxchat')
+
+    useStorage('db').setItem('users.json', JSON.stringify({ users: [user] }))
 
     peer.subscribe(CHAT_ID)
   },
