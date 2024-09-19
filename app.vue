@@ -23,11 +23,9 @@ const formUi = reactive<FormUI>({
 let socket: WebSocket
 
 const activeUser = useCookie('tuxchat')
-activeUser.value = 'memotux'
 
 onMounted(() => {
   socket = new WebSocket('ws://localhost:3000/chat')
-
   socket.onopen = socketOnOpen
   socket.onmessage = socketOnMessage
 })
@@ -58,7 +56,7 @@ function socketOnMessage(event: MessageEvent<string>) {
     >
       <UContainer
         as="ul"
-        class="w-full h-[90%] overflow-y-scroll"
+        class="w-full h-[75%] overflow-y-scroll"
       >
         <li
           v-for="message in formUi.chat"
@@ -71,7 +69,7 @@ function socketOnMessage(event: MessageEvent<string>) {
       <UForm
         :schema="schema"
         :state="formState"
-        class="flex space-x-4 items-end w-full"
+        class="flex flex-col space-y-2 items-end w-full"
         @submit="onSubmit"
       >
         <UFormGroup
@@ -83,6 +81,17 @@ function socketOnMessage(event: MessageEvent<string>) {
           <UInput
             v-model="formState.message"
             placeholder="Type a message..."
+          />
+        </UFormGroup>
+        <UFormGroup
+          label="Name"
+          name="name"
+          class="w-full"
+          required
+        >
+          <UInput
+            v-model="activeUser"
+            placeholder="Your name here..."
           />
         </UFormGroup>
         <UButton
