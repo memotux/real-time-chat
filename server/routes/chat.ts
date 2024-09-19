@@ -3,6 +3,9 @@ const CHAT_ID = 'TUX:chat'
 export default defineWebSocketHandler({
   open(peer) {
     console.log("[ws] open", peer);
+
+    useStorage('db').setItem('users.json', JSON.stringify({ users: ['memotux'] }))
+
     peer.subscribe(CHAT_ID)
   },
 
