@@ -22,12 +22,8 @@ const formUi = reactive<FormUI>({
 })
 let socket: WebSocket
 
-async function onSubmit(event: FormSubmitEvent<FormSchema>) {
-  // Do something with data
-  console.log(event.data)
-  socket.send(event.data.message)
-  formState.message = ''
-}
+const activeUser = useCookie('tuxchat')
+activeUser.value = 'memotux'
 
 onMounted(() => {
   socket = new WebSocket('ws://localhost:3000/chat')
@@ -39,6 +35,11 @@ onMounted(() => {
 onUnmounted(() => {
   socket.close()
 })
+
+function onSubmit(event: FormSubmitEvent<FormSchema>) {
+  socket.send(event.data.message)
+  formState.message = ''
+}
 
 function socketOnOpen() {
   formUi.connected = true
