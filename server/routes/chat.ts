@@ -1,23 +1,55 @@
+import type { MessagesItem } from "@/types";
+
 const CHAT_ID = 'TUX:chat'
 
 export default defineWebSocketHandler({
-  open(peer) {
+  async open(peer) {
     console.log("[ws] open", peer);
 
-    const user = getCookie(peer.ctx, 'tuxchat')
+    const user = getCookie(peer.ctx, 'tuxchat') || 'anonymous'
 
-    useStorage('db').setItem('users.json', JSON.stringify({ users: [user] }))
+    if (!await useStorage('db').hasItem('messages.json')) {
+      useStorage('db').setItem('messages.json', JSON.stringify({}))
+    }
+
+    const messages = await useStorage('db').getItem<MessagesItem>('messages.json')
+
+    if (messages && Object.keys(messages).includes(user)) {
+      const messagesWithId = messages[user].map((m, i) => ({ ...m, id: i }))
+      peer.send({ history: messagesWithId })
+    } else if (user !== 'anonymous') {
+      await useStorage('db')
+        .setItem(
+          'messages.json',
+          JSON.stringify({ ...messages, [user]: [] })
+        )
+    } else {
+      throw new Error("User not valid");
+    }
 
     peer.subscribe(CHAT_ID)
+    peer.send({ server: 'Subscribed to ' + CHAT_ID })
   },
 
-  message(peer, message) {
-    console.log("[ws] message", peer, message);
-    if (message.text().includes("ping")) {
-      peer.send("pong");
+  async message(peer, message) {
+    // console.log("[ws] message", peer, message);
+    try {
+      const activeUser = getCookie(peer.ctx, 'tuxchat') || 'anonymus'
+      const messages = await useStorage<MessagesItem>('db').getItem('messages.json') ?? { anonymous: [] }
+
+      if (Object.keys(messages).includes(activeUser)) {
+        messages[activeUser].push({
+          message: message.text()
+        })
+        const id = messages[activeUser].length - 1
+        useStorage('db').setItem('messages.json', JSON.stringify(messages))
+        peer.publish(CHAT_ID, { message: message.text(), id })
+        peer.send({ message: message.text(), id })
+      }
+    } catch (error) {
+      console.error(error);
+      throw new Error("User not registered");
     }
-    peer.publish(CHAT_ID, message.text())
-    peer.send(message.text())
   },
 
   close(peer, event) {
@@ -27,6 +59,7 @@ export default defineWebSocketHandler({
 
   error(peer, error) {
     console.log("[ws] error", peer, error);
+    peer.send(error.message)
   },
 });
 

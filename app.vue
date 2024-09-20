@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
+import type { MessageData } from '@/types'
 
 const schema = z.object({
   message: z.string(),
@@ -8,17 +9,19 @@ const schema = z.object({
 
 type FormSchema = z.output<typeof schema>
 
-interface FormUI {
+interface Chat {
   connected: boolean
-  chat: Array<string>
+  messages: Array<{ message?: string; id?: number }>
 }
+
+const toast = useToast()
 
 const formState = reactive<FormSchema>({
   message: '',
 })
-const formUi = reactive<FormUI>({
+const chat = reactive<Chat>({
   connected: false,
-  chat: [],
+  messages: [],
 })
 let socket: WebSocket
 
@@ -28,6 +31,12 @@ onMounted(() => {
   socket = new WebSocket('ws://localhost:3000/chat')
   socket.onopen = socketOnOpen
   socket.onmessage = socketOnMessage
+  socket.onclose = () => {
+    chat.connected = false
+  }
+  socket.onerror = (event) => {
+    console.error(event)
+  }
 })
 
 onUnmounted(() => {
@@ -40,10 +49,21 @@ function onSubmit(event: FormSubmitEvent<FormSchema>) {
 }
 
 function socketOnOpen() {
-  formUi.connected = true
+  chat.connected = true
 }
 function socketOnMessage(event: MessageEvent<string>) {
-  formUi.chat.push(event.data)
+  const { message, server, history } = JSON.parse(event.data) as MessageData
+  if (server) {
+    toast.add({ title: server })
+  }
+
+  if (message) {
+    chat.messages.push(message)
+  }
+
+  if (history) {
+    chat.messages = structuredClone(history)
+  }
 }
 </script>
 
@@ -59,10 +79,10 @@ function socketOnMessage(event: MessageEvent<string>) {
         class="w-full h-[75%] overflow-y-scroll"
       >
         <li
-          v-for="message in formUi.chat"
-          :key="message"
+          v-for="item in chat.messages"
+          :key="item.id"
         >
-          {{ message }}
+          {{ item.message }}
         </li>
       </UContainer>
       <UDivider />
@@ -81,6 +101,7 @@ function socketOnMessage(event: MessageEvent<string>) {
           <UInput
             v-model="formState.message"
             placeholder="Type a message..."
+            :disabled="!chat.connected"
           />
         </UFormGroup>
         <UFormGroup
@@ -92,17 +113,19 @@ function socketOnMessage(event: MessageEvent<string>) {
           <UInput
             v-model="activeUser"
             placeholder="Your name here..."
+            :disabled="!chat.connected"
           />
         </UFormGroup>
         <UButton
           type="submit"
-          :disable="!formUi.connected"
+          :disabled="!chat.connected"
         >
           Submit
         </UButton>
       </UForm>
     </UContainer>
   </UContainer>
+  <UNotifications />
 </template>
 
 <style>
