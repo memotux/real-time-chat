@@ -8,23 +8,29 @@ export default defineWebSocketHandler({
 
     const user = getCookie(peer.ctx, 'tuxchat') || 'anonymous'
 
+    if (user === 'anonymous') {
+      throw new Error("User not valid");
+    }
+
     if (!await useStorage('db').hasItem('messages.json')) {
       useStorage('db').setItem('messages.json', JSON.stringify({}))
     }
 
     const messages = await useStorage('db').getItem<MessagesItem>('messages.json')
 
-    if (messages && Object.keys(messages).includes(user)) {
-      const messagesWithId = messages[user].map((m, i) => ({ ...m, id: i }))
-      peer.send({ history: messagesWithId })
-    } else if (user !== 'anonymous') {
+    if (!messages?.[user]) {
+      // create user with empty array
       await useStorage('db')
         .setItem(
           'messages.json',
           JSON.stringify({ ...messages, [user]: [] })
         )
-    } else {
-      throw new Error("User not valid");
+    }
+
+    if (messages && Object.keys(messages).includes(user) && messages[user].length > 0) {
+      // send messages history
+      const messagesWithId = messages[user].map((m, i) => ({ ...m, id: i }))
+      peer.send({ history: messagesWithId })
     }
 
     peer.subscribe(CHAT_ID)
