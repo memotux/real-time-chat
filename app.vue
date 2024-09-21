@@ -52,17 +52,22 @@ function socketOnOpen() {
   chat.connected = true
 }
 function socketOnMessage(event: MessageEvent<string>) {
-  const { message, server, history } = JSON.parse(event.data) as MessageData
+  const { data, server, history, error } = JSON.parse(event.data) as MessageData
+  if (history) {
+    chat.messages = structuredClone(history)
+    return
+  }
+
   if (server) {
     toast.add({ title: server })
   }
 
-  if (message) {
-    chat.messages.push(message)
+  if (error) {
+    toast.add({ title: error, color: 'red' })
   }
 
-  if (history) {
-    chat.messages = structuredClone(history)
+  if (data) {
+    chat.messages.push(data)
   }
 }
 </script>
