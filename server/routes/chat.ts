@@ -18,7 +18,7 @@ export default defineWebSocketHandler({
 
     const messages = await useStorage('db').getItem<MessagesItem>('messages.json')
 
-    if (!messages?.[user]) {
+    if (messages && !messages[user]) {
       // create user with empty array
       await useStorage('db')
         .setItem(
