@@ -16,9 +16,11 @@ const socket = useSocket()
 const chat = useChat()
 const activeRoom = useCookie<{ room: string; user: string } | null>('tuxchat')
 
-onUnmounted(() => {
+const onLogout = () => {
   socket.close()
-})
+  chat.value.messages = []
+  activeRoom.value = null
+}
 
 function onSubmit(event: FormSubmitEvent<FormSchema>) {
   socket.send(event.data.message)
@@ -27,13 +29,10 @@ function onSubmit(event: FormSubmitEvent<FormSchema>) {
 </script>
 
 <template>
-  <UContainer
-    v-if="activeRoom"
-    class="flex justify-around items-center w-full"
-  >
-    <p>Room: {{ activeRoom.room }}</p>
-    <p>User: {{ activeRoom.user }}</p>
-    <UButton @click="activeRoom = null">Logout</UButton>
+  <UContainer class="flex justify-around items-center w-full">
+    <p>Room: {{ activeRoom?.room || 'Anonymous' }}</p>
+    <p>User: {{ activeRoom?.user || 'anonymous' }}</p>
+    <UButton @click="onLogout">Logout</UButton>
   </UContainer>
   <UDivider />
   <UForm
