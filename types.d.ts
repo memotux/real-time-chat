@@ -1,8 +1,13 @@
-export interface Message { message: string, id?: number }
+export interface Message { message: string, user: string, id: string }
 
-export type MessagesItem = Record<string, Message[]>
+export interface RoomItem {
+  users: string[]
+  messages: Message[]
+}
 
-export interface MessageData {
+export type Rooms = Record<string, RoomItem>
+
+export interface ChatData {
   server: string
   history: Message[]
   data: Message

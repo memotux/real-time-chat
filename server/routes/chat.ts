@@ -1,30 +1,23 @@
-import type { MessagesItem } from "@/types";
-
-const CHAT_ID = 'TUX:chat'
+import type { Rooms } from "@/types";
 
 export default defineWebSocketHandler({
   async open(peer) {
-    const user = getCookie(peer.ctx, 'tuxchat')
+    const cookie = getCookie(peer.ctx, 'tuxchat') || '{"user": null, "room": null}'
 
-    if (user === 'anonymous') {
-      console.log('user is ', user);
+    const { user, room } = JSON.parse(cookie)
 
+    if (!user || !room) {
       throw createError({
-        statusMessage: "User not valid",
+        statusMessage: "User or Room not valid",
         statusCode: 400
       });
     }
 
-    if (!user) {
-      peer.send({ server: 'Please add a name, and send "Subscribe" to init chat.' })
-      return
-    }
-
     try {
-      if (!await useStorage('db').hasItem('messages.json')) {
+      if (!await useStorage('db').hasItem('rooms.json')) {
         console.log('creating db file');
 
-        await useStorage('db').setItem('messages.json', JSON.stringify({}))
+        await useStorage('db').setItem('rooms.json', JSON.stringify({}))
       }
     } catch (error) {
       console.error(error)
@@ -35,26 +28,31 @@ export default defineWebSocketHandler({
     }
 
     try {
-      const messages = await useStorage('db').getItem<MessagesItem>('messages.json')
+      const rooms = await useStorage('db').getItem<Rooms>('rooms.json')
 
-      if (messages && !messages[user]) {
-        // create user with empty array
-        await useStorage('db')
-          .setItem(
-            'messages.json',
-            JSON.stringify({ ...messages, [user]: [] })
-          )
-        messages[user] = []
+      if (rooms && !rooms[room]) {
+        // create room with empty array
+        rooms[room] = { users: [], messages: [] }
+        peer.send({ server: 'Room created.' })
+      }
+      if (rooms && !rooms[room].users.includes(user)) {
+        rooms[room].users.push(user)
+        peer.send({ server: 'User registered.' })
       }
 
-      if (messages && messages[user].length > 0) {
+      await useStorage('db')
+        .setItem(
+          'rooms.json',
+          JSON.stringify({ ...rooms })
+        )
+
+      if (rooms && rooms[room].messages.length > 0) {
         // send messages history
-        const messagesWithId = messages[user].map((m, i) => ({ ...m, id: i }))
-        peer.send({ history: messagesWithId })
+        peer.send({ history: rooms[room].messages })
       }
 
-      peer.subscribe(CHAT_ID)
-      peer.send({ server: 'Subscribed to ' + CHAT_ID })
+      peer.subscribe(room)
+      peer.send({ server: `Room ${room} open.` })
     } catch (error) {
       console.error(error)
       throw createError({
@@ -68,45 +66,40 @@ export default defineWebSocketHandler({
 
   async message(peer, message) {
     // console.log("[ws] message", peer, message);
-    const activeUser = getCookie(peer.ctx, 'tuxchat') || 'anonymus'
-    if (message.text().toLocaleLowerCase() === 'subscribe') {
-      const messages = await useStorage('db').getItem<MessagesItem>('messages.json')
-      if (!messages) {
+    const cookie = getCookie(peer.ctx, 'tuxchat') || '{"user": null, "room": null}'
+    const { user, room } = JSON.parse(cookie)
+
+    if (!user || !room) {
+      throw createError({
+        statusMessage: "User or Room not valid",
+        statusCode: 400
+      });
+    }
+
+    try {
+      const rooms = await useStorage<Rooms>('db').getItem('rooms.json')
+
+      if (!rooms) {
         throw createError({
           statusCode: 500,
-          statusMessage: 'Something went wrong with database.'
+          statusMessage: 'Unable to get Rooms'
         })
       }
-      if (messages && messages[activeUser]?.length > 0) {
-        console.log(activeUser);
 
-        peer.send({ server: 'User already subscribed.' })
-        return
-      }
-      await useStorage('db')
-        .setItem(
-          'messages.json',
-          JSON.stringify({ ...messages, [activeUser]: [] })
-        )
-
-      peer.send({ server: 'User successfuly registered.' })
-      return
-    }
-    try {
-
-      const messages = await useStorage<MessagesItem>('db').getItem('messages.json') ?? { anonymous: [] }
-
-      if (Object.keys(messages).includes(activeUser)) {
-        const id = messages[activeUser].push({
-          message: message.text()
-        })
-        peer.publish(CHAT_ID, { data: { message: message.text(), id } })
-        peer.send({ data: { message: message.text(), id } })
-        await useStorage('db').setItem('messages.json', JSON.stringify(messages))
+      if (Object.keys(rooms).includes(room)) {
+        const newMessage = {
+          message: message.text(),
+          user,
+          id: crypto.randomUUID()
+        }
+        rooms[room].messages.push(newMessage)
+        peer.publish(room, { data: newMessage })
+        peer.send({ data: newMessage })
+        await useStorage('db').setItem('rooms.json', JSON.stringify(rooms))
       } else {
         throw createError({
           statusCode: 403,
-          statusMessage: 'User not registered'
+          statusMessage: 'Room not open.'
         })
       }
     } catch (error) {
@@ -115,12 +108,16 @@ export default defineWebSocketHandler({
   },
 
   close(peer, event) {
+    const cookie = getCookie(peer.ctx, 'tuxchat') || '{"user": null, "room": null}'
+    const { room } = JSON.parse(cookie)
+    setCookie(peer.ctx, 'tuxchat', JSON.stringify(null))
+    peer.unsubscribe(room)
     console.log("[ws] close", peer, event);
-    peer.unsubscribe(CHAT_ID)
   },
 
   error(peer, error) {
     console.log("[ws] error", peer, error);
+
     peer.send({ error: error.message })
   },
 });

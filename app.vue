@@ -1,75 +1,6 @@
 <script setup lang="ts">
-import { z } from 'zod'
-import type { FormSubmitEvent } from '#ui/types'
-import type { MessageData } from '@/types'
-
-const schema = z.object({
-  message: z.string(),
-})
-
-type FormSchema = z.output<typeof schema>
-
-interface Chat {
-  connected: boolean
-  messages: Array<{ message?: string; id?: number }>
-}
-
-const toast = useToast()
-
-const formState = reactive<FormSchema>({
-  message: '',
-})
-const chat = reactive<Chat>({
-  connected: false,
-  messages: [],
-})
-let socket: WebSocket
-
-const activeUser = useCookie('tuxchat')
-
-onMounted(() => {
-  socket = new WebSocket('ws://localhost:3000/chat')
-  socket.onopen = socketOnOpen
-  socket.onmessage = socketOnMessage
-  socket.onclose = () => {
-    chat.connected = false
-  }
-  socket.onerror = (event) => {
-    console.error(event)
-  }
-})
-
-onUnmounted(() => {
-  socket.close()
-})
-
-function onSubmit(event: FormSubmitEvent<FormSchema>) {
-  socket.send(event.data.message)
-  formState.message = ''
-}
-
-function socketOnOpen() {
-  chat.connected = true
-}
-function socketOnMessage(event: MessageEvent<string>) {
-  const { data, server, history, error } = JSON.parse(event.data) as MessageData
-  if (history) {
-    chat.messages = structuredClone(history)
-    return
-  }
-
-  if (server) {
-    toast.add({ title: server })
-  }
-
-  if (error) {
-    toast.add({ title: error, color: 'red' })
-  }
-
-  if (data) {
-    chat.messages.push(data)
-  }
-}
+const chat = useChat()
+const activeRoom = useCookie('tuxchat')
 </script>
 
 <template>
@@ -91,43 +22,8 @@ function socketOnMessage(event: MessageEvent<string>) {
         </li>
       </UContainer>
       <UDivider />
-      <UForm
-        :schema="schema"
-        :state="formState"
-        class="flex flex-col space-y-2 items-end w-full"
-        @submit="onSubmit"
-      >
-        <UFormGroup
-          label="Message"
-          name="message"
-          class="w-full"
-          required
-        >
-          <UInput
-            v-model="formState.message"
-            placeholder="Type a message..."
-            :disabled="!chat.connected"
-          />
-        </UFormGroup>
-        <UFormGroup
-          label="Name"
-          name="name"
-          class="w-full"
-          required
-        >
-          <UInput
-            v-model="activeUser"
-            placeholder="Your name here..."
-            :disabled="!chat.connected"
-          />
-        </UFormGroup>
-        <UButton
-          type="submit"
-          :disabled="!chat.connected"
-        >
-          Submit
-        </UButton>
-      </UForm>
+      <FormRoom v-if="!activeRoom" />
+      <FormMessage v-else />
     </UContainer>
   </UContainer>
   <UNotifications />
