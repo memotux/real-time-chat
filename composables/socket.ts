@@ -17,10 +17,12 @@ export const useSocket = () => {
 
     if (server) {
       toast.add({ title: server })
+      return
     }
 
     if (error) {
       toast.add({ title: error, color: 'red' })
+      return
     }
 
     if (data) {
