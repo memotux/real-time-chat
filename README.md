@@ -1,11 +1,13 @@
 # Nuxt 3 Real Time Chat
 
+Inspired by [@midudev Chat en tiempo real](https://youtu.be/WpbBhTx5R9Q)
+
 ## Features
 
-- Use Nitro/h3 Web Socket API in server
+- Use Nitro/h3 WebSocket API in server
 - Browser WebSocket API
-- Use Nuxt/Nitro Storage 'fs'
-- Crate, Update, Save Chat Rooms.
+- Use Nuxt/Nitro Storage 'fs' to save rooms and messages.
+- Login, Create, Update, Save Chat Rooms.
 
 ### TODO
 
