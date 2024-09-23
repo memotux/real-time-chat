@@ -36,7 +36,7 @@ export default defineWebSocketHandler({
       peer.send({ server: 'Room created.' })
       updateDB = true
     }
-    if (rooms && !(user in rooms[room].users)) {
+    if (rooms && !(rooms[room].users.includes(user))) {
       rooms[room].users.push(user)
       peer.send({ server: 'User registered.' })
       updateDB = true
