@@ -1,11 +1,8 @@
 import type { Rooms } from "@/types";
-import { getRoomUser } from "../utils/chat";
 
 export default defineWebSocketHandler({
   async open(peer) {
     const { room, user } = getRoomUser(peer.ctx, 'tuxchat')
-
-    setCookie(peer.ctx, 'tuxchat', JSON.stringify({ room, user, auth: crypto.getRandomValues }))
 
     try {
       if (!await useStorage('db').hasItem('rooms.json')) {
