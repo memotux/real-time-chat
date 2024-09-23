@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "@memotux/real-time-chat",
   "private": true,
   "type": "module",
   "scripts": {

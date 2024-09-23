@@ -4,6 +4,8 @@ export default defineWebSocketHandler({
   async open(peer) {
     const { room, user } = getRoomUser(peer.ctx, 'tuxchat')
 
+    // TODO: add AUTH
+
     try {
       if (!await useStorage('db').hasItem('rooms.json')) {
         console.log('creating db file');
