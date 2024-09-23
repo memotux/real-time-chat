@@ -39,7 +39,7 @@ function onSubmit(event: FormSubmitEvent<FormSchema>) {
     :schema="schema"
     :state="state"
     class="flex flex-col space-y-2 items-end w-full"
-    @submit="onSubmit"
+    @submit.prevent="onSubmit"
   >
     <UFormGroup
       label="Message"
