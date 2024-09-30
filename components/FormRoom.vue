@@ -14,10 +14,15 @@ const state = reactive<FormSchema>({
   room: '',
 })
 
-const activeRoom = useCookie('tuxchat')
+const { signIn } = useAuth()
 
-function onSubmit(event: FormSubmitEvent<FormSchema>) {
-  activeRoom.value = JSON.stringify({ ...event.data })
+async function onSubmit(event: FormSubmitEvent<FormSchema>) {
+  try {
+    await signIn({ ...event.data }, { redirect: false })
+  } catch (error) {
+    console.log(error)
+  }
+
   state.user = ''
   state.room = ''
 }

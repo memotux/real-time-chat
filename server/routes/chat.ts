@@ -1,64 +1,12 @@
-import type { Rooms } from "@/types";
+import type { Room } from "@/types";
+import { verify } from "jsonwebtoken";
 
 export default defineWebSocketHandler({
   async open(peer) {
-    const { room, user } = getRoomUser(peer.ctx, 'tuxchat')
 
-    // TODO: add AUTH
+    const { room } = await isAuthUser(peer.ctx)
 
-    try {
-      if (!await useStorage('db').hasItem('rooms.json')) {
-        console.log('creating db file');
-
-        await useStorage('db').setItem('rooms.json', JSON.stringify({}))
-      }
-    } catch (error) {
-      console.error(error)
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Unable to create DB'
-      })
-    }
-    let rooms: Rooms | null = null
-    try {
-      rooms = await useStorage('db').getItem('rooms.json')
-    } catch (error) {
-      console.error(error)
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Unable to access DB'
-      })
-    }
-
-    let updateDB = false
-
-    if (rooms && !(room in rooms)) {
-      // create room with empty array
-      rooms[room] = { users: [], messages: [] }
-      peer.send({ server: 'Room created.' })
-      updateDB = true
-    }
-    if (rooms && !(rooms[room].users.includes(user))) {
-      rooms[room].users.push(user)
-      peer.send({ server: 'User registered.' })
-      updateDB = true
-    }
-
-    if (updateDB) {
-      try {
-        await useStorage('db')
-          .setItem(
-            'rooms.json',
-            JSON.stringify({ ...rooms })
-          )
-      } catch (error) {
-        console.log(error);
-        throw createError({
-          statusCode: 500,
-          statusMessage: 'Error updating DB.'
-        })
-      }
-    }
+    const rooms = await getRoomsDB()
 
     if (rooms && rooms[room].messages.length > 0) {
       // send messages history
@@ -73,18 +21,10 @@ export default defineWebSocketHandler({
 
   async message(peer, message) {
     // console.log("[ws] message", peer, message);
-    const { user, room } = getRoomUser(peer.ctx, 'tuxchat')
 
-    let rooms: Rooms | null = null
-    try {
-      rooms = await useStorage('db').getItem('rooms.json')
-    } catch (error) {
-      console.error(error);
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Can not get Rooms.'
-      })
-    }
+    const { room, user } = await isAuthUser(peer.ctx)
+
+    const rooms = await getRoomsDB()
 
     if (!rooms) {
       throw createError({
@@ -111,10 +51,8 @@ export default defineWebSocketHandler({
     }
   },
 
-  close(peer, event) {
-    const { room } = getRoomUser(peer.ctx, 'tuxchat')
-
-    // setCookie(peer.ctx, 'tuxchat', JSON.stringify(null))
+  async close(peer, event) {
+    const { room } = await isAuthUser(peer.ctx)
     peer.unsubscribe(room)
     console.log("[ws] close", peer, event);
   },

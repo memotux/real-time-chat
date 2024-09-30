@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const chat = useChat()
-const activeRoom = useCookie('tuxchat')
+const { status } = useAuth()
 </script>
 
 <template>
@@ -22,8 +22,8 @@ const activeRoom = useCookie('tuxchat')
         </li>
       </UContainer>
       <UDivider />
-      <FormRoom v-if="!activeRoom" />
-      <FormMessage v-else />
+      <FormMessage v-if="status === 'authenticated'" />
+      <FormRoom v-else />
     </UContainer>
   </UContainer>
   <UNotifications />

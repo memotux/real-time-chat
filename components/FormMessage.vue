@@ -12,26 +12,26 @@ const state = reactive<FormSchema>({
   message: '',
 })
 
-const socket = useSocket()
+// const socket = useSocket()
 const chat = useChat()
-const activeRoom = useCookie<{ room: string; user: string } | null>('tuxchat')
+const { signOut, data } = useAuth()
 
 const onLogout = () => {
-  socket.close()
-  chat.value.messages = []
-  activeRoom.value = null
+  // socket.close()
+  // chat.value.messages = []
+  signOut({ redirect: false })
 }
 
 function onSubmit(event: FormSubmitEvent<FormSchema>) {
-  socket.send(event.data.message)
+  // socket.send(event.data.message)
   state.message = ''
 }
 </script>
 
 <template>
   <UContainer class="flex justify-around items-center w-full">
-    <p>Room: {{ activeRoom?.room || 'Anonymous' }}</p>
-    <p>User: {{ activeRoom?.user || 'anonymous' }}</p>
+    <p>Room: {{ data?.room || 'Anonymous' }}</p>
+    <p>User: {{ data?.user || 'anonymous' }}</p>
     <UButton @click="onLogout">Logout</UButton>
   </UContainer>
   <UDivider />

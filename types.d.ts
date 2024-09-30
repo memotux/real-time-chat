@@ -13,3 +13,13 @@ export interface ChatData {
   data: Message
   error: string
 }
+
+export interface Room {
+  user: string
+  room: string
+}
+
+interface TokensByUser {
+  access: Record<string, string>
+  refresh: Record<string, string>
+}
