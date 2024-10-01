@@ -23,7 +23,7 @@ const onLogout = () => {
 }
 
 function onSubmit(event: FormSubmitEvent<FormSchema>) {
-  // socket.send(event.data.message)
+  socket.send(event.data.message)
   state.message = ''
 }
 
