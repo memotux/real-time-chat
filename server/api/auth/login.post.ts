@@ -50,23 +50,28 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const accessToken = sign(result.data, useRuntimeConfig().authSecret, {
-    expiresIn: ACCESS_TOKEN_TTL
-  })
-  const refreshToken = sign(result.data, useRuntimeConfig().authSecret, {
-    // 1 day
-    expiresIn: 60 * 60 * 24
-  })
-
   const tokens = await getTokensDB()
 
-  updateDB = false
-
   if (tokens) {
-    // create room with empty array
-    if (!(user in tokens)) {
-      tokens[user] = { access: {}, refresh: {} }
+    if (user in tokens) {
+      return {
+        token: {
+          accessToken: Object.keys(tokens[user].access)[0],
+          refreshToken: Object.keys(tokens[user].refresh)[0]
+        }
+      }
     }
+
+    const accessToken = sign(result.data, useRuntimeConfig().authSecret, {
+      expiresIn: ACCESS_TOKEN_TTL
+    })
+    const refreshToken = sign(result.data, useRuntimeConfig().authSecret, {
+      // 1 day
+      expiresIn: 60 * 60 * 24
+    })
+
+    // create tokens with empty object
+    tokens[user] = { access: {}, refresh: {} }
     tokens[user].access[accessToken] = refreshToken
     tokens[user].refresh[refreshToken] = accessToken
     try {
@@ -82,12 +87,11 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Error updating DB.'
       })
     }
-  }
-
-  return {
-    token: {
-      accessToken,
-      refreshToken
+    return {
+      token: {
+        accessToken,
+        refreshToken
+      }
     }
   }
 })
