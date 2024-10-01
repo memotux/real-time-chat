@@ -1,6 +1,3 @@
-import type { Room } from "@/types";
-import { verify } from "jsonwebtoken";
-
 export default defineWebSocketHandler({
   async open(peer) {
 

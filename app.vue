@@ -22,7 +22,7 @@ const { status } = useAuth()
         </li>
       </UContainer>
       <UDivider />
-      <FormMessage v-if="status === 'authenticated'" />
+      <FormMessage v-if="status !== 'unauthenticated'" />
       <FormRoom v-else />
     </UContainer>
   </UContainer>

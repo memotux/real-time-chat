@@ -12,13 +12,13 @@ const state = reactive<FormSchema>({
   message: '',
 })
 
-// const socket = useSocket()
-const chat = useChat()
 const { signOut, data } = useAuth()
+const socket = useSocket()
+const chat = useChat()
 
 const onLogout = () => {
-  // socket.close()
-  // chat.value.messages = []
+  socket.close()
+  chat.value.messages = []
   signOut({ redirect: false })
 }
 
@@ -26,6 +26,8 @@ function onSubmit(event: FormSubmitEvent<FormSchema>) {
   // socket.send(event.data.message)
   state.message = ''
 }
+
+onUnmounted(() => socket.close())
 </script>
 
 <template>
