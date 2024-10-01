@@ -1,5 +1,6 @@
 import { verify } from "jsonwebtoken"
-import { Room, Rooms, TokensByUser } from "~/types"
+import type { Room, Rooms, TokensByUser } from "@/types"
+import type { H3Event } from 'h3'
 
 export function extractToken(authorizationHeader: string) {
   return authorizationHeader.startsWith('Bearer ')
@@ -62,10 +63,14 @@ export async function getTokensDB() {
   return tokens
 }
 
-export function decodeToken(ctx: any) {
-  const authorizationHeader = getRequestHeader(ctx, 'Authorization')
+export function decodeToken(ctx: H3Event) {
+  let authorizationHeader = getRequestHeader(ctx, 'Authorization')
   if (typeof authorizationHeader === 'undefined') {
-    throw createError({ statusCode: 403, statusMessage: 'Need to pass valid Bearer-authorization header to access this endpoint' })
+    authorizationHeader = getCookie(ctx, 'auth.token')
+
+    if (!authorizationHeader) {
+      throw createError({ statusCode: 403, statusMessage: 'Need to pass valid authorization to access this endpoint' })
+    }
   }
 
   const token = extractToken(authorizationHeader)
@@ -84,7 +89,7 @@ export function decodeToken(ctx: any) {
   return { decoded, token }
 }
 
-export async function isAuthUser(ctx: any) {
+export async function isAuthUser(ctx: H3Event) {
   const { decoded, token } = decodeToken(ctx)
   // Check against known token
   const tokens = await getTokensDB()
