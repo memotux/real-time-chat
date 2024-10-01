@@ -1,4 +1,4 @@
 export default defineEventHandler(async (event) => {
-  // All checks successful
-  return isAuthUser(event)
+  const { decoded } = await decodeToken(event)
+  return { ...decoded }
 })

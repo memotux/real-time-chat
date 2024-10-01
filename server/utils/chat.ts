@@ -63,7 +63,7 @@ export async function getTokensDB() {
   return tokens
 }
 
-export function decodeToken(ctx: H3Event) {
+export async function decodeToken(ctx: H3Event) {
   let authorizationHeader = getRequestHeader(ctx, 'Authorization')
   if (typeof authorizationHeader === 'undefined') {
     authorizationHeader = getCookie(ctx, 'auth.token')
@@ -86,11 +86,6 @@ export function decodeToken(ctx: H3Event) {
     throw createError({ statusCode: 403, statusMessage: 'You must be logged in to use this endpoint' })
   }
 
-  return { decoded, token }
-}
-
-export async function isAuthUser(ctx: H3Event) {
-  const { decoded, token } = decodeToken(ctx)
   // Check against known token
   const tokens = await getTokensDB()
 
@@ -101,5 +96,5 @@ export async function isAuthUser(ctx: H3Event) {
     })
   }
 
-  return { ...decoded }
+  return { decoded, token }
 }

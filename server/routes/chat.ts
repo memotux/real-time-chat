@@ -1,7 +1,7 @@
 export default defineWebSocketHandler({
   async open(peer) {
 
-    const { room } = await isAuthUser(peer.ctx)
+    const { decoded: { room } } = await decodeToken(peer.ctx)
 
     const rooms = await getRoomsDB()
 
@@ -19,7 +19,7 @@ export default defineWebSocketHandler({
   async message(peer, message) {
     // console.log("[ws] message", peer, message);
 
-    const { room, user } = await isAuthUser(peer.ctx)
+    const { decoded: { room, user } } = await decodeToken(peer.ctx)
 
     const rooms = await getRoomsDB()
 
@@ -49,7 +49,7 @@ export default defineWebSocketHandler({
   },
 
   async close(peer, event) {
-    const { room } = await isAuthUser(peer.ctx)
+    const { decoded: { room } } = await decodeToken(peer.ctx)
     peer.unsubscribe(room)
     console.log("[ws] close", peer, event);
   },
