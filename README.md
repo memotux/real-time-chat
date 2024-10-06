@@ -8,10 +8,7 @@ Inspired by [@midudev Chat en tiempo real](https://youtu.be/WpbBhTx5R9Q)
 - Browser WebSocket API
 - Use Nuxt/Nitro Storage 'fs' to save rooms and messages.
 - Login, Create, Update, Save Chat Rooms.
-
-### TODO
-
-- Add Auth.
+- Auth with `@sidebase/nuxt-auth`.
 
 ## Setup
 
