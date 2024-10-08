@@ -1,11 +1,16 @@
+import type { TokensDB } from "@/types"
+
 export default defineEventHandler(async (event) => {
-  const { decoded } = await decodeToken(event)
+  const { user } = await decodeToken(event)
 
   const tokens = await getTokensDB()
 
-  if (!tokens || !tokens[decoded.user]) return
+  if (!tokens || !tokens[user]) return { status: 'tokens not exist' }
 
-  await saveTokensDB(JSON.stringify({ ...tokens, [decoded.user]: undefined }))
+  const updateTokens: TokensDB = Object.fromEntries(
+    Object.entries(tokens).filter((token) => token[0] !== user))
+
+  await saveTokensDB(updateTokens)
 
   return { status: 'ok' }
 })
