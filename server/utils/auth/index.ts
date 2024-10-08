@@ -2,13 +2,13 @@ import { verify } from "jsonwebtoken"
 import type { Room } from "@/types"
 import type { H3Event } from 'h3'
 
-export function extractToken(authorizationHeader: string) {
+function extractToken(authorizationHeader: string) {
   return authorizationHeader.startsWith('Bearer ')
     ? authorizationHeader.slice(7)
     : authorizationHeader
 }
 
-export async function decodeToken(ctx: H3Event) {
+function getAuthToken(ctx: H3Event) {
   let authorizationHeader = getRequestHeader(ctx, 'Authorization')
   if (typeof authorizationHeader === 'undefined') {
     authorizationHeader = getCookie(ctx, 'auth.token')
@@ -18,28 +18,27 @@ export async function decodeToken(ctx: H3Event) {
     }
   }
 
-  const token = extractToken(authorizationHeader)
+  return extractToken(authorizationHeader)
+}
+
+export async function decodeToken(ctx: H3Event) {
+  const token = getAuthToken(ctx)
+
   let decoded: Room
+
   try {
     decoded = verify(token, useRuntimeConfig().authSecret) as Room
   }
   catch (error) {
     console.error({
-      msg: 'Login failed. Here\'s the raw error:',
+      msg: 'Token not valid.',
       error
     })
-    throw createError({ statusCode: 403, statusMessage: 'You must be logged in to use this endpoint' })
-  }
-
-  // Check against known token
-  const tokens = await getTokensDB()
-
-  if (!tokens || !tokens[decoded.user].access[token]) {
     throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized, user is not logged in.'
+      statusCode: 403,
+      statusMessage: 'You must be logged in to use this endpoint'
     })
   }
 
-  return { decoded, token }
+  return { user: decoded.user, room: decoded.room, decoded, token }
 }
