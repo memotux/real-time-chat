@@ -36,11 +36,9 @@ export default defineEventHandler(async (event) => {
 
   if (updateDB) {
     try {
-      await useStorage('db')
-        .setItem(
-          'rooms.json',
-          JSON.stringify({ ...rooms })
-        )
+      await saveRoomsDB(
+        JSON.stringify(rooms)
+      )
     } catch (error) {
       console.log(error);
       throw createError({
@@ -75,11 +73,9 @@ export default defineEventHandler(async (event) => {
     tokens[user].access[accessToken] = refreshToken
     tokens[user].refresh[refreshToken] = accessToken
     try {
-      await useStorage('db')
-        .setItem(
-          'tokens.json',
-          JSON.stringify({ ...tokens })
-        )
+      await saveTokensDB(
+        JSON.stringify(tokens)
+      )
     } catch (error) {
       console.log(error);
       throw createError({
