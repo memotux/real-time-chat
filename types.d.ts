@@ -5,8 +5,6 @@ export interface RoomItem {
   messages: Message[]
 }
 
-export type Rooms = Record<string, RoomItem>
-
 export interface ChatData {
   server: string
   history: Message[]
@@ -19,7 +17,10 @@ export interface Room {
   room: string
 }
 
-interface TokensByUser {
+export interface TokensByUser {
   access: Record<string, string>
   refresh: Record<string, string>
 }
+
+export type RoomsDB = Record<string, RoomItem>
+export type TokensDB = Record<string, TokensByUser>
