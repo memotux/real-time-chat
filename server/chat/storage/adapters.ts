@@ -29,10 +29,10 @@ export async function getDB<D extends StorageValue = RoomsDB | TokensDB>(key: st
   }
 }
 
-export async function setDB(key: string, data: string) {
+export async function setDB(key: string, data: RoomsDB | TokensDB) {
   try {
     if (await existDB(key)) {
-      return await useStorage('db').setItem(key, data)
+      return await useStorage('db').setItem(key, JSON.stringify(data))
     }
     throw createError({
       statusCode: 500,
