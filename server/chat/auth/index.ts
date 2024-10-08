@@ -1,6 +1,7 @@
-import { verify } from "jsonwebtoken"
+import { sign, verify } from "jsonwebtoken"
 import type { Room } from "@/types"
 import type { H3Event } from 'h3'
+import { type CredentialsSchema, ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL, credentialsSchema } from "./types"
 
 function extractToken(authorizationHeader: string) {
   return authorizationHeader.startsWith('Bearer ')
@@ -41,4 +42,22 @@ export async function decodeToken(ctx: H3Event) {
   }
 
   return { user: decoded.user, room: decoded.room, decoded, token }
+}
+
+export function validateLogin(data: CredentialsSchema) {
+  return credentialsSchema.safeParse(data)
+}
+
+export function generateTokens(data: CredentialsSchema) {
+  const accessToken = sign(data, useRuntimeConfig().authSecret, {
+    expiresIn: ACCESS_TOKEN_TTL
+  })
+  const refreshToken = sign(data, useRuntimeConfig().authSecret, {
+    expiresIn: REFRESH_TOKEN_TTL
+  })
+
+  return {
+    accessToken,
+    refreshToken
+  }
 }

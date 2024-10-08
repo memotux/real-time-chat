@@ -1,17 +1,17 @@
-import { z } from "zod"
-import { sign } from 'jsonwebtoken'
 import type { TokensByUser } from "@/types"
 
-/** 3600 seconds */
-export const ACCESS_TOKEN_TTL = 60 * 60
-
-const credentialsSchema = z.object({
-  user: z.string().min(3),
-  room: z.string().min(3)
-})
-
 export default defineEventHandler(async (event) => {
-  const result = credentialsSchema.safeParse(await readBody(event))
+  const body = await readBody(event)
+
+  if (!body) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Body is empty.'
+    })
+  }
+
+  const result = validateLogin(body)
+
   if (!result.success) {
     throw createError({
       statusCode: 400,
@@ -21,20 +21,20 @@ export default defineEventHandler(async (event) => {
 
   const { user, room } = result.data
 
-  // If room not exist create it
+  // If room not exist, create room
   let savedRoom = await getRoom(room)
 
   if (!savedRoom) {
     savedRoom = await createRoom(room)
   }
 
-  // If user not in room, include it
+  // If user not in room, include user in room
   if (savedRoom && !(savedRoom.users.includes(user))) {
     savedRoom.users.push(user)
     await saveRoom(room, savedRoom)
   }
 
-  // If user already have tokens, return it
+  // If user already have tokens, return saved tokens
   const savedTokens = await getUserTokens(user)
 
   if (savedTokens) {
@@ -46,14 +46,8 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Create new tokens
-  const accessToken = sign(result.data, useRuntimeConfig().authSecret, {
-    expiresIn: ACCESS_TOKEN_TTL
-  })
-  const refreshToken = sign(result.data, useRuntimeConfig().authSecret, {
-    // 1 day
-    expiresIn: 60 * 60 * 24
-  })
+  // Generate new tokens
+  const { accessToken, refreshToken } = generateTokens(result.data)
 
   const userTokens: TokensByUser = {
     access: {
@@ -64,6 +58,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  // Save new tokens on DB
   try {
     await saveUserTokens(
       user,
