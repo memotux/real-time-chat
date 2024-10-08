@@ -1,4 +1,4 @@
-import { RoomsDB, StorageValue, TokensDB } from "@/types";
+import type { RoomsDB, StorageValue, TokensDB } from "@/types";
 
 /**
  * Validate if DB exist
