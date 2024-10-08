@@ -1,5 +1,7 @@
 export interface Message { message: string, user: string, id: string }
 
+type StorageValue = null | string | number | boolean | object;
+
 export interface RoomItem {
   users: string[]
   messages: Message[]
@@ -22,5 +24,9 @@ export interface TokensByUser {
   refresh: Record<string, string>
 }
 
-export type RoomsDB = Record<string, RoomItem>
-export type TokensDB = Record<string, TokensByUser>
+export interface RoomsDB extends StorageValue {
+  [key: string]: RoomItem
+}
+export interface TokensDB extends StorageValue {
+  [key: string]: TokensByUser
+}

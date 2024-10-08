@@ -1,4 +1,4 @@
-import { RoomsDB, TokensDB } from "@/types";
+import { RoomsDB, StorageValue, TokensDB } from "@/types";
 
 async function existDB(key: string) {
   return useStorage('db').hasItem(key)
@@ -24,11 +24,11 @@ async function validateDB(key: string) {
   }
 }
 
-async function getDB<D>(key: string) {
+async function getDB<D extends StorageValue = RoomsDB | TokensDB>(key: string) {
   validateDB(key)
 
   try {
-    return await useStorage('db').getItem(key) as D
+    return useStorage('db').getItem<D>(key)
   } catch (error) {
     console.error(error)
     throw createError({
@@ -39,9 +39,9 @@ async function getDB<D>(key: string) {
 }
 
 export async function getRoomsDB() {
-  return await getDB<RoomsDB>('rooms.json')
+  return getDB<RoomsDB>('rooms.json')
 }
 
 export async function getTokensDB() {
-  return await getDB<TokensDB>('tokens.json')
+  return getDB<TokensDB>('tokens.json')
 }
