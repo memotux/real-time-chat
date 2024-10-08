@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { sign } from 'jsonwebtoken'
+import type { TokensByUser } from "@/types"
 
 /** 3600 seconds */
 export const ACCESS_TOKEN_TTL = 60 * 60
@@ -20,74 +21,66 @@ export default defineEventHandler(async (event) => {
 
   const { user, room } = result.data
 
-  const rooms = await getRoomsDB()
+  // If room not exist create it
+  let savedRoom = await getRoom(room)
 
-  let updateDB = false
-
-  if (rooms && !(room in rooms)) {
-    // create room with empty array
-    rooms[room] = { users: [], messages: [] }
-    updateDB = true
-  }
-  if (rooms && !(rooms[room].users.includes(user))) {
-    rooms[room].users.push(user)
-    updateDB = true
+  if (!savedRoom) {
+    savedRoom = await createRoom(room)
   }
 
-  if (updateDB) {
-    try {
-      await saveRoomsDB(
-        JSON.stringify(rooms)
-      )
-    } catch (error) {
-      console.log(error);
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Error updating DB.'
-      })
-    }
+  // If user not in room, include it
+  if (savedRoom && !(savedRoom.users.includes(user))) {
+    savedRoom.users.push(user)
+    await saveRoom(room, savedRoom)
   }
 
-  const tokens = await getTokensDB()
+  // If user already have tokens, return it
+  const savedTokens = await getUserTokens(user)
 
-  if (tokens) {
-    if (user in tokens) {
-      return {
-        token: {
-          accessToken: Object.keys(tokens[user].access)[0],
-          refreshToken: Object.keys(tokens[user].refresh)[0]
-        }
-      }
-    }
-
-    const accessToken = sign(result.data, useRuntimeConfig().authSecret, {
-      expiresIn: ACCESS_TOKEN_TTL
-    })
-    const refreshToken = sign(result.data, useRuntimeConfig().authSecret, {
-      // 1 day
-      expiresIn: 60 * 60 * 24
-    })
-
-    // create tokens with empty object
-    tokens[user] = { access: {}, refresh: {} }
-    tokens[user].access[accessToken] = refreshToken
-    tokens[user].refresh[refreshToken] = accessToken
-    try {
-      await saveTokensDB(
-        JSON.stringify(tokens)
-      )
-    } catch (error) {
-      console.log(error);
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Error updating DB.'
-      })
-    }
+  if (savedTokens) {
     return {
       token: {
-        accessToken,
-        refreshToken
+        accessToken: Object.keys(savedTokens.access)[0],
+        refreshToken: Object.keys(savedTokens.refresh)[0]
       }
+    }
+  }
+
+  // Create new tokens
+  const accessToken = sign(result.data, useRuntimeConfig().authSecret, {
+    expiresIn: ACCESS_TOKEN_TTL
+  })
+  const refreshToken = sign(result.data, useRuntimeConfig().authSecret, {
+    // 1 day
+    expiresIn: 60 * 60 * 24
+  })
+
+  const userTokens: TokensByUser = {
+    access: {
+      [accessToken]: refreshToken
+    },
+    refresh: {
+      [refreshToken]: accessToken
+    }
+  }
+
+  try {
+    await saveUserTokens(
+      user,
+      userTokens
+    )
+  } catch (error) {
+    console.log(error);
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Error updating DB.'
+    })
+  }
+
+  return {
+    token: {
+      accessToken,
+      refreshToken
     }
   }
 })

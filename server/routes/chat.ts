@@ -3,11 +3,11 @@ export default defineWebSocketHandler({
 
     const { room } = await decodeToken(peer.ctx)
 
-    const rooms = await getRoomsDB()
+    const savedRoom = await getRoom(room)
 
-    if (rooms && rooms[room].messages.length > 0) {
+    if (savedRoom && savedRoom.messages.length > 0) {
       // send messages history
-      peer.send({ history: rooms[room].messages })
+      peer.send({ history: savedRoom.messages })
     }
 
     peer.subscribe(room)
@@ -21,35 +21,35 @@ export default defineWebSocketHandler({
 
     const { room, user } = await decodeToken(peer.ctx)
 
-    const rooms = await getRoomsDB()
+    const savedRoom = await getRoom(room)
 
-    if (!rooms) {
+    if (!savedRoom) {
       throw createError({
         statusCode: 500,
-        statusMessage: 'Rooms not exist.'
+        statusMessage: 'Room not exist.'
       })
     }
 
-    if (room in rooms) {
-      const newMessage = {
-        message: message.text(),
-        user,
-        id: crypto.randomUUID()
-      }
-      rooms[room].messages.push(newMessage)
-      peer.publish(room, { data: newMessage })
-      peer.send({ data: newMessage })
-      await saveRoomsDB(JSON.stringify(rooms))
-    } else {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Room not exist.'
-      })
+    const newMessage = {
+      message: message.text(),
+      user,
+      id: crypto.randomUUID()
+    }
+
+    savedRoom.messages.push(newMessage)
+    peer.publish(room, { data: newMessage })
+    peer.send({ data: newMessage })
+
+    try {
+      await saveRoom(room, savedRoom)
+    } catch (error) {
+      console.error(error);
     }
   },
 
   async close(peer, event) {
     const { room } = await decodeToken(peer.ctx)
+
     peer.unsubscribe(room)
     console.log("[ws] close", peer, event);
   },
