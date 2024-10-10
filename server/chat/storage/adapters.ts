@@ -18,16 +18,14 @@ export async function existDB(key: StorageItemKey): Promise<boolean> {
  * 
  * @param key { StorageItemkey } storage item key
  * 
- * @returns { Promise<null | void> } Resolve to key string if succesfull. Otherwise resolve NULL if key not exist or there is an error creating the item
+ * @returns { Promise<StorageItemKey | null> } Resolve to key string if succesfull. Otherwise resolve NULL if key not exist or there is an error creating the item
  */
-export async function createDB(key: StorageItemKey): Promise<string | null> {
+export async function createDB(key: StorageItemKey): Promise<StorageItemKey | null> {
   try {
     if (!await existDB(key)) {
       await useStorage('db').setItem(key, '{}')
-      return key
-    } else {
-      return null
     }
+    return key
   } catch (error) {
     console.error(error);
     return null
@@ -37,8 +35,8 @@ export async function createDB(key: StorageItemKey): Promise<string | null> {
 /**
  * Get DB item with key name
  * 
- * @param key {StorageItemKey} storage item key
- * @returns {Promise<D | null>} Promise could resolve NULL if key not exist, content not exist or there is an error on get item. Otherwise return item content.
+ * @param key { StorageItemKey } storage item key
+ * @returns { Promise<D | null> } Promise could resolve NULL if key not exist, content not exist or there is an error on get item. Otherwise return item content.
  */
 export async function getDB<D extends StorageValue = RoomsDB | TokensDB>(key: StorageItemKey): Promise<D | null> {
   try {
@@ -58,16 +56,18 @@ export async function getDB<D extends StorageValue = RoomsDB | TokensDB>(key: St
  * 
  * @param key { StorageKey } storage key item
  * @param data { RoomsDB | TokensDB } data to be stored in storage key
- * @returns { Promise<void | null> } Promise could resolve NULL if key not exist or there is error
+ * @returns { Promise<RoomsDB | TokensDB | null> } Resolve `data` if succesfull, or NULL if key not exist or error
  */
 export async function setDB(key: StorageItemKey, data: RoomsDB | TokensDB): Promise<RoomsDB | TokensDB | null> {
   try {
     if (await existDB(key)) {
       await useStorage('db').setItem(key, JSON.stringify(data))
       return data
-    } else {
-      return null
     }
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'DB Key not exist'
+    })
   } catch (error) {
     console.error(error);
     return null
