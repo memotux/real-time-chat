@@ -1,9 +1,11 @@
-import type { TokensByUser } from "@/types"
+import type { RoomItem, TokensByUser } from "@/types"
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
   if (!body) {
+    console.error({ body });
+
     throw createError({
       statusCode: 400,
       statusMessage: 'Body is empty.'
@@ -13,6 +15,8 @@ export default defineEventHandler(async (event) => {
   const result = validateLogin(body)
 
   if (!result.success) {
+    console.error({ result });
+
     throw createError({
       statusCode: 400,
       statusMessage: 'User or Room not valid'
@@ -20,22 +24,60 @@ export default defineEventHandler(async (event) => {
   }
 
   const { user, room } = result.data
+  let savedRoom: RoomItem | null
 
   // If room not exist, create room
-  let savedRoom = await getRoom(room)
+  try {
+    savedRoom = await getRoom(room)
 
-  if (!savedRoom) {
-    savedRoom = await createRoom(room)
+    if (!savedRoom) {
+      savedRoom = await createRoom(room)
+    }
+  } catch (error) {
+    console.error(error);
+
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Room can not be access.',
+      data: { room }
+    })
   }
 
   // If user not in room, include user in room
-  if (savedRoom && !(savedRoom.users.includes(user))) {
+  if (savedRoom && !savedRoom.users.includes(user)) {
     savedRoom.users.push(user)
-    await saveRoom(room, savedRoom)
+    try {
+      const result = await saveRoom(room, savedRoom)
+      if (!result) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: 'Room can not be saved.',
+          data: { room }
+        })
+      }
+    } catch (error) {
+      console.error(error);
+
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Erro while saving room',
+        data: { room }
+      })
+    }
   }
 
   // If user already have tokens, return saved tokens
-  const savedTokens = await getUserTokens(user)
+  let savedTokens: TokensByUser | null
+  try {
+    savedTokens = await getUserTokens(user)
+  } catch (error) {
+    console.error(error);
+
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Error while getting saved user tokens.'
+    })
+  }
 
   if (savedTokens) {
     return {
@@ -65,10 +107,11 @@ export default defineEventHandler(async (event) => {
       userTokens
     )
   } catch (error) {
-    console.log(error);
+    console.error(error);
+
     throw createError({
       statusCode: 500,
-      statusMessage: 'Error updating DB.'
+      statusMessage: 'Error saving new tokens.'
     })
   }
 
