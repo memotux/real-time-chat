@@ -1,20 +1,21 @@
 import type { RoomItem, RoomsDB, TokensByUser, TokensDB } from "@/types";
 import { getDB, setDB, createDB } from "./adapters";
+import { StorageItemKey } from "../types";
 
 /**
  * Rooms Use Cases
 */
 
 export async function getRoomsDB() {
-  return getDB<RoomsDB>('rooms.json')
+  return getDB<RoomsDB>(StorageItemKey.ROOMS)
 }
 
 export async function saveRoomsDB(data: RoomsDB) {
-  await setDB('rooms.json', data)
+  return setDB(StorageItemKey.ROOMS, data)
 }
 
 export async function createRoomsDB() {
-  await createDB('rooms.json')
+  return createDB(StorageItemKey.ROOMS)
 }
 
 export async function getRoom(room: string) {
@@ -22,6 +23,8 @@ export async function getRoom(room: string) {
   if (rooms) {
     return rooms[room]
   }
+
+  return null
 }
 
 export async function existRoom(room: string) {
@@ -29,6 +32,8 @@ export async function existRoom(room: string) {
   if (rooms && room in rooms) {
     return rooms
   }
+
+  return null
 }
 
 export async function createRoom(room: string, data?: RoomItem) {
@@ -39,6 +44,8 @@ export async function createRoom(room: string, data?: RoomItem) {
     await saveRoomsDB(rooms)
     return rooms[room]
   }
+
+  return null
 }
 
 export async function saveRoom(room: string, data: RoomItem) {
@@ -47,22 +54,25 @@ export async function saveRoom(room: string, data: RoomItem) {
   if (rooms) {
     rooms[room] = data
     await saveRoomsDB(rooms)
+    return rooms[room]
   }
+
+  return null
 }
 
 /**
  * Tokens Use Cases
 */
 export async function getTokensDB() {
-  return getDB<TokensDB>('tokens.json')
+  return getDB<TokensDB>(StorageItemKey.TOKENS)
 }
 
 export async function saveTokensDB(data: TokensDB) {
-  await setDB('tokens.json', data)
+  return setDB(StorageItemKey.TOKENS, data)
 }
 
 export async function createTokensDB() {
-  await createDB('tokens.json')
+  return createDB(StorageItemKey.TOKENS)
 }
 
 export async function getUserTokens(user: string) {
@@ -81,5 +91,8 @@ export async function saveUserTokens(user: string, data: TokensByUser) {
   if (tokens) {
     tokens[user] = data
     await saveTokensDB(tokens)
+    return tokens[user]
   }
+
+  return null
 }
