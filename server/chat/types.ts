@@ -9,3 +9,8 @@ export const credentialsSchema = z.object({
 })
 
 export type CredentialsSchema = z.infer<typeof credentialsSchema>
+
+export enum StorageItemKey {
+  ROOMS = 'rooms.json',
+  TOKENS = 'tokens.json'
+}
