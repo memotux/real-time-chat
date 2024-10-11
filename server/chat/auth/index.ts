@@ -1,7 +1,9 @@
-import { sign, verify } from "jsonwebtoken"
+import { type JwtPayload, sign, verify } from "jsonwebtoken"
 import type { Room } from "@/types"
 import type { H3Event } from 'h3'
 import { type CredentialsSchema, ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL, credentialsSchema } from "../types"
+
+type VerifiedToken = Room & JwtPayload
 
 function extractToken(authorizationHeader: string) {
   return authorizationHeader.startsWith('Bearer ')
@@ -15,7 +17,7 @@ function getAuthToken(ctx: H3Event) {
     authorizationHeader = getCookie(ctx, 'auth.token')
 
     if (!authorizationHeader) {
-      throw createError({ statusCode: 403, statusMessage: 'Need to pass valid authorization to access this endpoint' })
+      return null
     }
   }
 
@@ -25,23 +27,19 @@ function getAuthToken(ctx: H3Event) {
 export async function decodeToken(ctx: H3Event) {
   const token = getAuthToken(ctx)
 
-  let decoded: Room
+  if (!token) return null
+
+  let verifiedToken: VerifiedToken
 
   try {
-    decoded = verify(token, useRuntimeConfig().authSecret) as Room
+    verifiedToken = verify(token, useRuntimeConfig().authSecret) as VerifiedToken
   }
   catch (error) {
-    console.error({
-      msg: 'Token not valid.',
-      error
-    })
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'You must be logged in to use this endpoint'
-    })
+    console.error(error)
+    return null
   }
 
-  return { user: decoded.user, room: decoded.room, decoded, token }
+  return { user: verifiedToken.user, room: verifiedToken.room, decoded: verifiedToken, token }
 }
 
 export function validateLogin(data: CredentialsSchema) {
@@ -60,4 +58,16 @@ export function generateTokens(data: CredentialsSchema) {
     accessToken,
     refreshToken
   }
+}
+
+export async function isUserAuthorized(ctx: H3Event) {
+  const token = await decodeToken(ctx)
+
+  if (!token)
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'User not authorized.'
+    })
+
+  return token
 }
