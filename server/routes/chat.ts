@@ -1,9 +1,17 @@
+import { isUserAuthorized } from "../chat/auth";
+
 export default defineWebSocketHandler({
   async open(peer) {
 
-    const { room } = await decodeToken(peer.ctx)
+    const { room } = await isUserAuthorized(peer.ctx)
 
     const savedRoom = await getRoom(room)
+
+    if (!savedRoom)
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Error getting room.'
+      })
 
     if (savedRoom && savedRoom.messages.length > 0) {
       // send messages history
@@ -19,14 +27,14 @@ export default defineWebSocketHandler({
   async message(peer, message) {
     // console.log("[ws] message", peer, message);
 
-    const { room, user } = await decodeToken(peer.ctx)
+    const { room, user } = await isUserAuthorized(peer.ctx)
 
     const savedRoom = await getRoom(room)
 
     if (!savedRoom) {
       throw createError({
         statusCode: 500,
-        statusMessage: 'Room not exist.'
+        statusMessage: 'Error getting room.'
       })
     }
 
@@ -41,14 +49,20 @@ export default defineWebSocketHandler({
     peer.send({ data: newMessage })
 
     try {
-      await saveRoom(room, savedRoom)
+      const updatedRoom = await saveRoom(room, savedRoom)
+
+      if (!updatedRoom)
+        throw createError({
+          statusCode: 500,
+          statusMessage: 'Error saving room.'
+        })
     } catch (error) {
       console.error(error);
     }
   },
 
   async close(peer, event) {
-    const { room } = await decodeToken(peer.ctx)
+    const { room } = await isUserAuthorized(peer.ctx)
 
     peer.unsubscribe(room)
     console.log("[ws] close", peer, event);
