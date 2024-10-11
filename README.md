@@ -2,6 +2,9 @@
 
 Inspired by [@midudev Chat en tiempo real](https://youtu.be/WpbBhTx5R9Q)
 
+> [!CAUTION]
+> This is not a production ready project. Use it on your own risk.
+
 ## Features
 
 - Use Nitro/h3 WebSocket API in server
