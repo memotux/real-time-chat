@@ -42,9 +42,11 @@ export async function getDB<D extends StorageValue = RoomsDB | TokensDB>(key: St
   try {
     if (await existDB(key)) {
       return useStorage('db').getItem<D>(key)
-    } else {
-      return null
     }
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'DB Key not exist'
+    })
   } catch (error) {
     console.error(error)
     return null
@@ -58,14 +60,14 @@ export async function getDB<D extends StorageValue = RoomsDB | TokensDB>(key: St
  * @param data { RoomsDB | TokensDB } data to be stored in storage key
  * @returns { Promise<RoomsDB | TokensDB | null> } Resolve `data` if succesfull, or NULL if key not exist or error
  */
-export async function setDB(key: StorageItemKey, data: RoomsDB | TokensDB): Promise<RoomsDB | TokensDB | null> {
+export async function setDB<D extends RoomsDB | TokensDB>(key: StorageItemKey, data: D): Promise<D | null> {
   try {
     if (await existDB(key)) {
       await useStorage('db').setItem(key, JSON.stringify(data))
       return data
     }
     throw createError({
-      statusCode: 500,
+      statusCode: 404,
       statusMessage: 'DB Key not exist'
     })
   } catch (error) {
