@@ -1,5 +1,3 @@
-import { isUserAuthorized } from "../chat/auth";
-
 export default defineWebSocketHandler({
   async open(peer) {
 

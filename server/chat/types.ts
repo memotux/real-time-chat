@@ -1,4 +1,6 @@
 import { z } from "zod"
+import type { JwtPayload } from "jsonwebtoken"
+import type { Room } from "@/types"
 
 export const ACCESS_TOKEN_TTL = 60 * 60
 export const REFRESH_TOKEN_TTL = 60 * 60 * 24
@@ -14,3 +16,5 @@ export enum StorageItemKey {
   ROOMS = 'rooms.json',
   TOKENS = 'tokens.json'
 }
+
+export type VerifiedToken = Room & JwtPayload
