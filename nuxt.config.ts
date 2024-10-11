@@ -40,6 +40,9 @@ export default defineNuxtConfig({
         driver: 'fs',
         base: './data/tuxchat'
       }
+    },
+    imports: {
+      dirs: ['./server/chat/**/index.ts']
     }
   }
 })
