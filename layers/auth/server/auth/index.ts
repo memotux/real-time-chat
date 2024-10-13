@@ -1,6 +1,6 @@
 import { sign, verify } from "jsonwebtoken"
 import type { H3Event } from 'h3'
-import { type CredentialsSchema, type VerifiedToken, ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL, credentialsSchema } from "../types"
+import { type CredentialsSchema, type VerifiedToken, ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL, credentialsSchema } from "../../types"
 
 function extractToken(authorizationHeader: string) {
   return authorizationHeader.startsWith('Bearer ')
