@@ -14,7 +14,6 @@ export default defineEventHandler(async (event) => {
   const filteredTokens: TokensDB = Object.fromEntries(
     Object.entries(tokens).filter((token) => token[0] !== user))
 
-
   const updatedTokens = await saveTokensDB(filteredTokens)
 
   if (!updatedTokens)
@@ -22,7 +21,6 @@ export default defineEventHandler(async (event) => {
       statusCode: 500,
       statusMessage: 'Error updating tokens.'
     })
-
 
   return { status: 'logout' }
 })
