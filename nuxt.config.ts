@@ -6,12 +6,6 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       websocket: true
-    },
-    storage: {
-      db: {
-        driver: 'fs',
-        base: './data/tuxchat'
-      }
     }
   }
 })
