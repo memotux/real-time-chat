@@ -1,4 +1,4 @@
-import type { TokensDB } from "@/types"
+import type { TokensDB } from "@@/types"
 
 export default defineEventHandler(async (event) => {
   const { user } = await isUserAuthorized(event)

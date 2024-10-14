@@ -1,4 +1,4 @@
-import type { RoomItem, TokensByUser } from "@/types"
+import type { RoomItem, TokensByUser } from "@@/types"
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)

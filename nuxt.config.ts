@@ -9,9 +9,6 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       websocket: true
-    },
-    imports: {
-      dirs: ['./server/chat/**/index.ts']
     }
   }
 })
