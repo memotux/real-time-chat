@@ -1,4 +1,4 @@
-import type { RoomsDB, StorageValue, TokensDB } from "@/types";
+import type { RoomsDB, StorageValue, TokensDB } from "@@/types";
 import type { StorageItemKey } from "../types";
 
 /**
