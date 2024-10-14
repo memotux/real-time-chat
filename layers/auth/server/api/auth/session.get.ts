@@ -1,4 +1,9 @@
 export default defineEventHandler(async (event) => {
-  const { decoded } = await decodeToken(event)
-  return { ...decoded }
+  const token = await decodeToken(event)
+
+  if (token) {
+    return { ...token.decoded }
+  }
+
+  return null
 })
