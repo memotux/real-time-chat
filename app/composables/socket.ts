@@ -1,4 +1,4 @@
-import type { ChatData } from "~/types"
+import type { ChatData } from "@@/types"
 
 export const useSocket = () => {
   const socket: WebSocket = new WebSocket('ws://localhost:3000/chat')

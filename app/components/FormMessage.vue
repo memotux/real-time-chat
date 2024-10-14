@@ -13,8 +13,8 @@ const state = reactive<FormSchema>({
 })
 
 const { signOut, data } = useAuth()
-const socket = useSocket()
 const chat = useChat()
+let socket: WebSocket
 
 const onLogout = () => {
   socket.close()
@@ -27,7 +27,9 @@ function onSubmit(event: FormSubmitEvent<FormSchema>) {
   state.message = ''
 }
 
-onUnmounted(() => socket.close())
+onMounted(() => {
+  socket = useSocket()
+})
 </script>
 
 <template>
