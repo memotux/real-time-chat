@@ -10,5 +10,10 @@ export default defineNuxtConfig({
     experimental: {
       websocket: true
     }
+  },
+  app: {
+    head: {
+      title: 'Tux Chat'
+    }
   }
 })
