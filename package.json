@@ -2,6 +2,16 @@
   "name": "@memotux/real-time-chat",
   "private": true,
   "type": "module",
+  "keywords": [
+    "nuxt",
+    "websocket",
+    "auth",
+    "chat",
+    "clean",
+    "architecture",
+    "code",
+    "layers"
+  ],
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
