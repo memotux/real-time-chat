@@ -38,12 +38,6 @@ export default defineNuxtConfig({
     experimental: {
       websocket: true
     },
-    storage: {
-      db: {
-        driver: 'fs',
-        base: './data/tuxchat'
-      }
-    },
     imports: {
       dirs: ['./server/chat/**/index.ts']
     }
