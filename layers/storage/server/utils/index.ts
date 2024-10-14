@@ -3,23 +3,39 @@ import { getDB, setDB, createDB } from "../adapters";
 import { StorageItemKey } from "../../types";
 
 /**
- * Rooms Use Cases
-*/
-
-export async function getRoomsDB() {
+ * Get saved Rooms DB
+ * @returns { Promise<RoomDB | null> } Promise that resolve with `RoomsDB` or `null`
+ */
+export async function getRoomsDB(): Promise<RoomsDB | null> {
   return getDB<RoomsDB>(StorageItemKey.ROOMS)
 }
 
-export async function saveRoomsDB(data: RoomsDB) {
+/**
+ * Save `data` on RoomsDB
+ * @param data { RoomsDB } Rooms DB data to be saved.
+ * @returns { Promise<RoomsDB | null> } Promise that resolve with `RoomsDB` or `null`
+ */
+export async function saveRoomsDB(data: RoomsDB): Promise<RoomsDB | null> {
   return setDB(StorageItemKey.ROOMS, data)
 }
 
-export async function createRoomsDB() {
+/**
+ * Create RoomsDB file
+ * @param data { RoomsDB } Rooms DB data to be saved.
+ * @returns { Promise<StorageItemKey | null> } Promise that resolve with `StorageItemKey` or `null`
+ */
+export async function createRoomsDB(): Promise<StorageItemKey | null> {
   return createDB(StorageItemKey.ROOMS)
 }
 
-export async function getRoom(room: string) {
+/**
+ * Get `RoomItem` by name, if exist.
+ * @param room { string } Room name provided by user
+ * @returns { Promise<RoomItem | null> } Promise that resolve with `RoomItem` if exist, `null` otherwise.
+ */
+export async function getRoom(room: string): Promise<RoomItem | null> {
   const currentRoom = await existRoom(room)
+
   if (currentRoom) {
     return currentRoom
   }
@@ -27,8 +43,14 @@ export async function getRoom(room: string) {
   return null
 }
 
-export async function existRoom(room: string) {
+/**
+ * Confirm if `room` exist in `RoomsDB`
+ * @param room { string } Room name provided by user
+ * @returns { Promise<RoomItem | null> } Promise that resolve with `RoomItem` if exist, `null` otherwise.
+ */
+export async function existRoom(room: string): Promise<RoomItem | null> {
   const rooms = await getRoomsDB()
+
   if (rooms && rooms[room]) {
     return rooms[room]
   }
@@ -36,7 +58,13 @@ export async function existRoom(room: string) {
   return null
 }
 
-export async function createRoom(room: string, data?: RoomItem) {
+/**
+ * Create `room` in `RoomsDB`, if `room` doesn't already exist.
+ * @param room { string } Room name provided by user
+ * @param data { Optional<RoomItem> } Optional data to be saved in room
+ * @returns { Promise<RoomItem | null> } Promise that resolve with `RoomItem` or `null`
+ */
+export async function createRoom(room: string, data?: RoomItem): Promise<RoomItem | null> {
   const rooms = await getRoomsDB()
 
   if (rooms && !(room in rooms)) {
@@ -48,7 +76,13 @@ export async function createRoom(room: string, data?: RoomItem) {
   return null
 }
 
-export async function saveRoom(room: string, data: RoomItem) {
+/**
+ * 
+ * @param room { string } Room name provided by user
+ * @param data { RoomItem } Data to be saved in `room`
+ * @returns { Promise<RoomItem | null> } Promise that resolve with `RoomItem` if `room` exist. `null` otherwise.
+ */
+export async function saveRoom(room: string, data: RoomItem): Promise<RoomItem | null> {
   const currentRoom = await existRoom(room)
 
   if (currentRoom) {
@@ -64,21 +98,36 @@ export async function saveRoom(room: string, data: RoomItem) {
 }
 
 /**
- * Tokens Use Cases
-*/
-export async function getTokensDB() {
+ * Get `TokensDB`, if exist
+ * @returns { Promise<TokensDB | null> } Promise that resolve `TokensDB` or `null`
+ */
+export async function getTokensDB(): Promise<TokensDB | null> {
   return getDB<TokensDB>(StorageItemKey.TOKENS)
 }
 
-export async function saveTokensDB(data: TokensDB) {
+/**
+ * Save `TokensDB` data
+ * @param data { TokensDB } Data to be saved in DB
+ * @returns { Promise<TokensDB | null> } Promise that resolve `TokensDB` or `null`
+ */
+export async function saveTokensDB(data: TokensDB): Promise<TokensDB | null> {
   return setDB(StorageItemKey.TOKENS, data)
 }
 
-export async function createTokensDB() {
+/**
+ * Create Tokens DB
+ * @returns { Promise<StorageItemKey | null> } Promise that resolve with `StorageItemKey` or `null`
+ */
+export async function createTokensDB(): Promise<StorageItemKey | null> {
   return createDB(StorageItemKey.TOKENS)
 }
 
-export async function getUserTokens(user: string) {
+/**
+ * Get User Tokens, if exist
+ * @param user { string } User name
+ * @returns { Promise<TokensByUser | null> } Promise that resolve with `TokensByUser` or `null`
+ */
+export async function getUserTokens(user: string): Promise<TokensByUser | null> {
   const tokens = await getTokensDB()
 
   if (tokens && tokens[user]) {
@@ -88,13 +137,21 @@ export async function getUserTokens(user: string) {
   return null
 }
 
-export async function saveUserTokens(user: string, data: TokensByUser) {
+/**
+ * Save User Tokens in DB
+ * @param user { string } User name
+ * @param data { TokensByUser } Data to be saved
+ * @returns { Promise<TokensByUser | null> } Promise that resolve with `TokensByUser` or `null`
+ */
+export async function saveUserTokens(user: string, data: TokensByUser): Promise<TokensByUser | null> {
   const tokens = await getTokensDB()
 
   if (tokens) {
     tokens[user] = data
-    await saveTokensDB(tokens)
-    return tokens[user]
+    if (await saveTokensDB(tokens)) {
+      return tokens[user]
+    }
+    return null
   }
 
   return null
