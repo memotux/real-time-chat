@@ -19,9 +19,9 @@ export async function createRoomsDB() {
 }
 
 export async function getRoom(room: string) {
-  const rooms = await existRoom(room)
-  if (rooms) {
-    return rooms[room]
+  const currentRoom = await existRoom(room)
+  if (currentRoom) {
+    return currentRoom
   }
 
   return null
@@ -29,8 +29,8 @@ export async function getRoom(room: string) {
 
 export async function existRoom(room: string) {
   const rooms = await getRoomsDB()
-  if (rooms && room in rooms) {
-    return rooms
+  if (rooms && rooms[room]) {
+    return rooms[room]
   }
 
   return null
@@ -49,12 +49,15 @@ export async function createRoom(room: string, data?: RoomItem) {
 }
 
 export async function saveRoom(room: string, data: RoomItem) {
-  const rooms = await existRoom(room)
+  const currentRoom = await existRoom(room)
 
-  if (rooms) {
-    rooms[room] = data
-    await saveRoomsDB(rooms)
-    return rooms[room]
+  if (currentRoom) {
+    const rooms = await getRoomsDB()
+    if (rooms) {
+      rooms[room] = data
+      await saveRoomsDB(rooms)
+      return rooms[room]
+    }
   }
 
   return null
@@ -78,7 +81,7 @@ export async function createTokensDB() {
 export async function getUserTokens(user: string) {
   const tokens = await getTokensDB()
 
-  if (tokens && user in tokens) {
+  if (tokens && tokens[user]) {
     return tokens[user]
   }
 
