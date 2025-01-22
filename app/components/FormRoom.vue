@@ -14,17 +14,19 @@ const state = reactive<FormSchema>({
   room: '',
 })
 
-const { signIn } = useAuth()
-
 async function onSubmit(event: FormSubmitEvent<FormSchema>) {
   try {
-    await signIn({ ...event.data }, { redirect: false })
+    await $fetch('/auth/local', {
+      method: 'post',
+      body: { ...event.data },
+    })
   } catch (error) {
-    console.log(error)
+    console.error(error)
+  } finally {
+    state.user = ''
+    state.room = ''
+    window.location.reload()
   }
-
-  state.user = ''
-  state.room = ''
 }
 </script>
 

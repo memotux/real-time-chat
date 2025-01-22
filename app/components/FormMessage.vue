@@ -12,14 +12,14 @@ const state = reactive<FormSchema>({
   message: '',
 })
 
-const { signOut, data } = useAuth()
+const { user, clear } = useUserSession()
 const chat = useChat()
 let socket: WebSocket
 
 const onLogout = () => {
   socket.close()
   chat.value.messages = []
-  signOut({ redirect: false })
+  clear()
 }
 
 function onSubmit(event: FormSubmitEvent<FormSchema>) {
@@ -34,8 +34,8 @@ onMounted(() => {
 
 <template>
   <UContainer class="flex justify-around items-center w-full">
-    <p>Room: {{ data?.room || 'Anonymous' }}</p>
-    <p>User: {{ data?.user || 'anonymous' }}</p>
+    <p>Room: {{ user?.user || 'Anonymous' }}</p>
+    <p>User: {{ user?.room || 'anonymous' }}</p>
     <UButton @click="onLogout">Logout</UButton>
   </UContainer>
   <UDivider />

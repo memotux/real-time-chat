@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const chat = useChat()
-const { status } = useAuth()
+const { loggedIn } = useUserSession()
 </script>
 
 <template>
@@ -12,7 +12,7 @@ const { status } = useAuth()
     >
       <UContainer
         as="ul"
-        class="w-full h-[75%] overflow-y-scroll"
+        class="w-full h-[70dvh] overflow-y-scroll"
       >
         <li
           v-for="item in chat.messages"
@@ -22,7 +22,7 @@ const { status } = useAuth()
         </li>
       </UContainer>
       <UDivider />
-      <FormMessage v-if="status !== 'unauthenticated'" />
+      <FormMessage v-if="loggedIn" />
       <FormRoom v-else />
     </UContainer>
   </UContainer>

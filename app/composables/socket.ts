@@ -8,8 +8,9 @@ export const useSocket = () => {
   socket.onopen = () => {
     chat.value.connected = true
   }
-  socket.onmessage = (event: MessageEvent<string>) => {
-    const { data, server, history, error } = JSON.parse(event.data) as ChatData
+  socket.onmessage = async (event: MessageEvent<Blob>) => {
+    const message = await event.data.text()
+    const { data, server, history, error } = JSON.parse(message) as ChatData
     if (history) {
       chat.value.messages = structuredClone(history)
       return

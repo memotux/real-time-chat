@@ -1,7 +1,6 @@
 export default defineWebSocketHandler({
   async open(peer) {
-
-    const { room } = await isUserAuthorized(peer.ctx)
+    const { room } = await isUserAuthorized(peer.request as Request)
 
     const savedRoom = await getRoom(room)
 
@@ -19,13 +18,13 @@ export default defineWebSocketHandler({
     peer.subscribe(room)
     peer.send({ server: `Room "${room}" open.` })
 
-    console.log("[ws] open", peer);
+    // console.log("[ws] open", peer);
   },
 
   async message(peer, message) {
     // console.log("[ws] message", peer, message);
 
-    const { room, user } = await isUserAuthorized(peer.ctx)
+    const { room, user } = await isUserAuthorized(peer.request as Request)
 
     const savedRoom = await getRoom(room)
 
@@ -60,10 +59,10 @@ export default defineWebSocketHandler({
   },
 
   async close(peer, event) {
-    const { room } = await isUserAuthorized(peer.ctx)
+    const { room } = await isUserAuthorized(peer.request as Request)
 
     peer.unsubscribe(room)
-    console.log("[ws] close", peer, event);
+    // console.log("[ws] close", peer, event);
   },
 
   error(peer, error) {

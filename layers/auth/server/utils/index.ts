@@ -1,4 +1,5 @@
 import { sign, verify } from "jsonwebtoken"
+import { parse } from "cookie-es";
 import type { H3Event } from 'h3'
 import { type CredentialsSchema, type VerifiedToken, ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL, credentialsSchema } from "../../types"
 
@@ -8,28 +9,40 @@ function extractToken(authorizationHeader: string) {
     : authorizationHeader
 }
 
-function getAuthToken(ctx: H3Event) {
-  let authorizationHeader = getRequestHeader(ctx, 'Authorization')
-  if (typeof authorizationHeader === 'undefined') {
-    authorizationHeader = getCookie(ctx, 'auth.token')
+async function getAuthToken(ctx: H3Event | Request) {
+  let authorizationHeader = null
 
-    if (!authorizationHeader) {
-      return null
+  if (isEvent(ctx)) {
+    authorizationHeader = getRequestHeader(ctx, 'Authorization')
+    if (typeof authorizationHeader === 'undefined') {
+      authorizationHeader = getCookie(ctx, 'nuxt-session')
     }
+  } else {
+    authorizationHeader = ctx.headers.get('Authorization')
+    if (authorizationHeader === null) {
+      const sealSession = parse(ctx.headers?.get('cookie') || '')['nuxt-session']
+      const { data } = await unsealSession(ctx as unknown as H3Event, useRuntimeConfig().session, sealSession!)
+
+      authorizationHeader = data?.tokens?.accessToken || null
+    }
+  }
+
+  if (!authorizationHeader) {
+    return null
   }
 
   return extractToken(authorizationHeader)
 }
 
-export async function decodeToken(ctx: H3Event) {
-  const token = getAuthToken(ctx)
+export async function decodeToken(ctx: H3Event | Request) {
+  const token = await getAuthToken(ctx)
 
   if (!token) return null
 
   let verifiedToken: VerifiedToken
 
   try {
-    verifiedToken = verify(token, useRuntimeConfig().authSecret) as VerifiedToken
+    verifiedToken = verify(token, useRuntimeConfig().oauth.local.clientSecret) as VerifiedToken
   }
   catch (error) {
     console.error(error)
@@ -57,7 +70,7 @@ export function generateTokens(data: CredentialsSchema) {
   }
 }
 
-export async function isUserAuthorized(ctx: H3Event) {
+export async function isUserAuthorized(ctx: Request) {
   const token = await decodeToken(ctx)
 
   if (!token)
