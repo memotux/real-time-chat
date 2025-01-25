@@ -32,13 +32,15 @@ export interface TokensDB extends StorageValue {
 }
 
 declare module '#auth-utils' {
-  interface User extends Room {
-    // Add your own fields
+  interface User {
+    room: string
+    user: string
   }
 
-  // interface UserSession {
-  //   // Add your own fields
-  // }
+  interface UserSession {
+    tokens: TokensByUser,
+    user: User
+  }
 
   // interface SecureSessionData {
   //   // Add your own fields

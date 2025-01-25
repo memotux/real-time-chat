@@ -1,6 +1,11 @@
+import { Room } from "~~/types";
+
 export default defineWebSocketHandler({
+  async upgrade(request) {
+    await requireUserSession(request)
+  },
   async open(peer) {
-    const { room } = await isUserAuthorized(peer.request as Request)
+    const { user: { room } } = await getUserSession(peer) as { user: Room }
 
     const savedRoom = await getRoom(room)
 
@@ -24,7 +29,7 @@ export default defineWebSocketHandler({
   async message(peer, message) {
     // console.log("[ws] message", peer, message);
 
-    const { room, user } = await isUserAuthorized(peer.request as Request)
+    const { user: { room, user } } = await getUserSession(peer) as { user: Room }
 
     const savedRoom = await getRoom(room)
 
@@ -59,10 +64,10 @@ export default defineWebSocketHandler({
   },
 
   async close(peer, event) {
-    const { room } = await isUserAuthorized(peer.request as Request)
+    const { user: { user, room } } = await getUserSession(peer) as { user: Room }
 
     peer.unsubscribe(room)
-    clearTokens(peer.request as Request)
+    clearTokens(user)
     // console.log("[ws] close", peer, event);
     console.log("[ws] close", event);
   },

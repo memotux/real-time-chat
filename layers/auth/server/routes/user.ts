@@ -1,9 +1,9 @@
-export default defineEventHandler(async (event) => {
-  const token = await decodeToken(event)
+import { tokenFromHeader } from "../utils"
 
-  if (token) {
-    return { ...token.decoded }
-  }
+export default defineEventHandler(async (event) => {
+  const token = await tokenFromHeader(event)
+
+  if (token) return token
 
   return null
 })
