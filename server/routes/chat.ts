@@ -62,7 +62,9 @@ export default defineWebSocketHandler({
     const { room } = await isUserAuthorized(peer.request as Request)
 
     peer.unsubscribe(room)
+    clearTokens(peer.request as Request)
     // console.log("[ws] close", peer, event);
+    console.log("[ws] close", event);
   },
 
   error(peer, error) {
