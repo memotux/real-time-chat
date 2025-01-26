@@ -1,3 +1,5 @@
+import { defineOAuthLocalEventHandler } from "../../lib/oauth/local"
+
 export default defineOAuthLocalEventHandler({
   config: {
     emailRequired: true
