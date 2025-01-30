@@ -31,6 +31,8 @@
     "@iconify-json/octicon": "^1.2.2",
     "@nuxt/ui": "^2.21.0",
     "@types/jsonwebtoken": "^9.0.8",
+    "@vueuse/core": "^12.5.0",
+    "@vueuse/nuxt": "^12.5.0",
     "cookie-es": "^1.2.2",
     "zod": "^3.24.1"
   },

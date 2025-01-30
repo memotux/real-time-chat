@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
+import type { ChatData } from '@@/types'
 
 const schema = z.object({
   message: z.string(),
@@ -12,23 +13,59 @@ const state = reactive<FormSchema>({
   message: '',
 })
 
-const { user, clear } = useUserSession()
 const chat = useChat()
-let socket: WebSocket
+const toast = useToast()
+const { user, clear } = useUserSession()
+
+const { send, open, close } = useWebSocket('ws://localhost:3000/chat', {
+  immediate: false,
+  autoConnect: false,
+  onConnected() {
+    chat.value.connected = true
+  },
+  async onMessage(_, event) {
+    const message = await event.data.text()
+    const { data, server, history, error } = JSON.parse(message) as ChatData
+    if (history) {
+      chat.value.messages = structuredClone(history)
+      return
+    }
+
+    if (server) {
+      toast.add({ title: server })
+      return
+    }
+
+    if (error) {
+      toast.add({ title: error, color: 'red' })
+      return
+    }
+
+    if (data) {
+      chat.value.messages.push(data)
+    }
+  },
+  onDisconnected() {
+    chat.value.connected = false
+  },
+  onError(_, event) {
+    console.error(event)
+  },
+})
 
 const onLogout = () => {
-  socket.close()
+  close()
   chat.value.messages = []
   clear()
 }
 
 function onSubmit(event: FormSubmitEvent<FormSchema>) {
-  socket.send(event.data.message)
+  send(event.data.message)
   state.message = ''
 }
 
 onMounted(() => {
-  socket = useSocket()
+  open()
 })
 </script>
 

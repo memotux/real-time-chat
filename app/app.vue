@@ -12,7 +12,7 @@ const { loggedIn } = useUserSession()
     >
       <UContainer
         as="ul"
-        class="w-full h-[70dvh] overflow-y-scroll"
+        class="w-full h-[60dvh] overflow-y-scroll"
       >
         <li
           v-for="item in chat.messages"
