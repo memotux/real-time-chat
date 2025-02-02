@@ -8,11 +8,14 @@ Inspired by [@midudev Chat en tiempo real](https://youtu.be/WpbBhTx5R9Q)
 ## Features
 
 - Use Nitro/h3 WebSocket API in server
-- Browser WebSocket API
-- Use Nuxt/Nitro Storage 'fs' to save rooms and messages.
-- Login, Create, Update, Save Chat Rooms.
-- Auth with `nuxt-auth-utils`. Use 'local' OAuth handler, just for development.
-- Clean Architecture with Nuxt Layers.
+- Browser WebSocket API with `@vueuse/useWebSocket`
+- Clean Architecture with Nuxt Layers:
+  - Storage:
+    - Use Nuxt/Nitro Storage 'fs' to save rooms and messages.
+    - Create, Update, Save Chat Rooms.
+  - Auth:
+    - Auth with `nuxt-auth-utils`.
+    - Use `local` OAuth handler, just for development.
 
 ## Setup
 
